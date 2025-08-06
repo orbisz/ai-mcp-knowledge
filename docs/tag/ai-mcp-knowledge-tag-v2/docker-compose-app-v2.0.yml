@@ -1,0 +1,93 @@
+version: '3.8'
+# docker-compose -f docker-compose-app-v2.0.yml up -d
+services:
+  ai-mcp-knowledge-app:
+#    image: fuzhengwei/ai-mcp-knowledge-app:2.3
+    image: registry.cn-hangzhou.aliyuncs.com/orbiszx/ai-mcp-knowledge-app:2.3
+    container_name: ai-mcp-knowledge-app
+    restart: always
+    ports:
+      - "8090:8090"
+    volumes:
+      - ./log:/data/log
+    environment:
+#      - TZ=PRC
+      - SERVER_PORT=8090
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://vector_db:5432/ai-rag-knowledge
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
+      - SPRING_AI_OLLAMA_BASE_URL=http://a4358e346f944d7dbf4b-deepseek-r1-llm-api.gcs-xy1a.jdcloud.com/
+      - SPRING_AI_OLLAMA_EMBEDDING_OPTIONS_NUM_BATCH=512
+      - SPRING_AI_OLLAMA_MODEL=nomic-embed-text
+      - SPRING_AI_OPENAI_BASE_URL=https://apis.itedus.cn
+      - SPRING_AI_OPENAI_API_KEY=sk-COdcrlQtQ5tjYA8F5794Ac68105c4c2aA2AbB9Ba6fBc0e89
+      - SPRING_AI_OPENAI_CHAT_OPTIONS_MODEL=gpt-4.1
+      - SPRING_AI_OPENAI_EMBEDDING_MODEL=text-embedding-ada-002
+      - SPRING_AI_RAG_EMBED=nomic-embed-text
+      - SPRING_AI_MCP_CLIENT_REQUEST_TIMEOUT=360s
+      - SPRING_AI_MCP_CLIENT_SSE_CONNECTIONS_MCP_SERVER_CSDN_URL=http://mcp-server-csdn-app:8101
+      - SPRING_AI_MCP_CLIENT_SSE_CONNECTIONS_MCP_SERVER_WEIXIN_URL=http://mcp-server-weixin-app:8102
+      - REDIS_SDK_CONFIG_HOST=redis
+      - REDIS_SDK_CONFIG_PORT=6379
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    depends_on:
+      - mcp-server-csdn-app
+      - mcp-server-weixin-app
+    networks:
+      - my-network
+
+  mcp-server-csdn-app:
+    #    image: fuzhengwei/mcp-server-csdn-app:1.1
+    image: registry.cn-hangzhou.aliyuncs.com/orbiszx/mcp-server-csdn-app:1.1
+    container_name: mcp-server-csdn-app
+    restart: always
+    ports:
+      - "8101:8101"
+    volumes:
+      - ./log:/data/log
+    environment:
+      - TZ=PRC
+      - SERVER_PORT=8101
+      - CSDN_API_CATEGORIES=Java场景面试宝典
+      - CSDN_API_COOKIE=uuid_tt_dd=10_19089772240-1754356238351-526297; dc_session_id=10_1754356238351.974714; dc_sid=a4a90f92709cb5c675355f26a247d2f6; fid=20_73638620039-1754356249876-920582; c_first_ref=default; c_first_page=https%3A//editor.csdn.net/md/; c_segment=9; SESSION=2c56a988-a703-4271-be2f-a488736431ce; creative_btn_mp=1; Hm_lvt_6bcd52f51e9b3dce32bec4a3997715ac=1754356251; HMACCOUNT=020E7E8E87A6ABA8; hide_login=1; UserName=hywzxy; UserInfo=8e197f1e8e3d4a1a888e47381ed8fc10; UserToken=8e197f1e8e3d4a1a888e47381ed8fc10; UserNick=-%E8%96%9B%E5%AE%9A%E8%B0%94%E7%9A%84%E7%8C%AB-; AU=00A; UN=hywzxy; BT=1754356267605; p_uid=U010000; csdn_newcert_hywzxy=1; c_dsid=11_1754356532033.009368; creativeSetApiNew=%7B%22toolbarImg%22%3A%22https%3A//img-home.csdnimg.cn/images/20231011044944.png%22%2C%22publishSuccessImg%22%3A%22https%3A//img-home.csdnimg.cn/images/20240229024608.png%22%2C%22articleNum%22%3A0%2C%22type%22%3A0%2C%22oldUser%22%3Afalse%2C%22useSeven%22%3Atrue%2C%22oldFullVersion%22%3Afalse%2C%22userName%22%3A%22hywzxy%22%7D; Hm_lpvt_6bcd52f51e9b3dce32bec4a3997715ac=1754360322; c_pref=https%3A//mp.csdn.net/; c_ref=https%3A//editor.csdn.net/; c_page_id=default; dc_tos=t0i136; log_Id_pv=27; log_Id_view=529; log_Id_click=30
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - my-network
+
+  mcp-server-weixin-app:
+    #    image: fuzhengwei/  mcp-server-weixin-app:1.1
+    image: registry.cn-hangzhou.aliyuncs.com/orbiszx/mcp-server-weixin-app:1.1
+    container_name: mcp-server-weixin-app
+    restart: always
+    ports:
+      - "8102:8102"
+    volumes:
+      - ./log:/data/log
+    environment:
+      - TZ=PRC
+      - SERVER_PORT=8102
+      - WEIXIN_API_ORIGINAL_ID=gh_43bd647c4685
+      - WEIXIN_API_APP_ID=wx4709d5d331dd75bd
+      - WEIXIN_API_APP_SECRET=da0a7c3519c18c6f0291e05d126de377
+      - WEIXIN_API_TEMPLATE_ID=sFqH53QrJmVSsRmvoMkk9NKQ_5ab2ybeKJasKVsdPxQ
+      - WEIXIN_API_TOUSER=oGlWrvvHfmgFRnoT3DeIA1fbiRn4
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - my-network
+
+networks:
+  my-network:
+    driver: bridge
